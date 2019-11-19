@@ -12,9 +12,12 @@ import (
 
 func main() {
 	questionToAnswerMap := readCSVtoMap("problems.csv")
+	score := 0
+	questions := 0
 
 	reader := bufio.NewReader(os.Stdin)
 	for question := range questionToAnswerMap {
+		questions++
 		fmt.Println("Your next question is ", question)
 
 		userAnswer, _ := reader.ReadString('\n')
@@ -23,12 +26,14 @@ func main() {
 
 		if strings.TrimSpace(userAnswer) == correctAnswer {
 			fmt.Println("You are a rockstar!")
+			score++
+
 		} else {
 			fmt.Println("You suck!")
-			break
 		}
 
 	}
+	fmt.Println("Your score is ", score, " out of ", questions)
 }
 
 func readCSVtoMap(csvFileName string) map[string]string {
@@ -41,7 +46,6 @@ func readCSVtoMap(csvFileName string) map[string]string {
 	questionToAnswerMap := make(map[string]string)
 
 	for {
-
 		record, err := reader.Read()
 
 		if err == io.EOF {
