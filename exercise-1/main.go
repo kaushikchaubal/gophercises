@@ -12,12 +12,14 @@ import (
 )
 
 func main() {
+	csvFileName := getCsvFileName()
+	questionAnswerMap := readCsvFileIntoMap(*csvFileName)
+	correctAnswersCount, questionsCount := playTheGame(questionAnswerMap)
 
-	fileNamePtr := flag.String("fileName", "problems.csv", "this is filename to read")
-	flag.Parse()
-	fmt.Println("Using file: ", *fileNamePtr)
+	fmt.Println("Your score is", correctAnswersCount, "out of", questionsCount)
+}
 
-	questionToAnswerMap := readCSVtoMap(*fileNamePtr)
+func playTheGame(questionToAnswerMap map[string]string) (int, int) {
 	correctAnswersCount := 0
 	questionsCount := 0
 
@@ -33,16 +35,21 @@ func main() {
 		if strings.TrimSpace(userAnswer) == correctAnswer {
 			fmt.Println("You are a rockstar!")
 			correctAnswersCount++
-
 		} else {
 			fmt.Println("You suck!")
 		}
-
 	}
-	fmt.Println("Your score is ", correctAnswersCount, " out of ", questionsCount)
+	return correctAnswersCount, questionsCount
 }
 
-func readCSVtoMap(csvFileName string) map[string]string {
+func getCsvFileName() *string {
+	fileNamePtr := flag.String("fileName", "problems.csv", "this is filename to read")
+	flag.Parse()
+	fmt.Println("Using file: ", *fileNamePtr)
+	return fileNamePtr
+}
+
+func readCsvFileIntoMap(csvFileName string) map[string]string {
 	csvfile, err := os.Open(csvFileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
