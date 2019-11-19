@@ -9,22 +9,32 @@ import (
 )
 
 func main() {
-	csvfile, err := os.Open("problems.csv")
+
+	readCSVtoMap("problems.csv")
+	fmt.Println(questionToAnswerMap)
+}
+
+func readCSVtoMap(csvFileName string) map[string]string {
+	csvfile, err := os.Open(csvFileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
 
-	r := csv.NewReader(csvfile)
+	reader := csv.NewReader(csvfile)
+	questionToAnswerMap := make(map[string]string)
 
 	for {
 
-		record, err := r.Read()
+		record, err := reader.Read()
+
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Question: %s Answer %s\n", record[0], record[1])
+		questionToAnswerMap[record[0]] = record[1]
 	}
+
+	return questionToAnswerMap
 }
