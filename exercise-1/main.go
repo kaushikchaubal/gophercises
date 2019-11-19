@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -11,13 +12,18 @@ import (
 )
 
 func main() {
-	questionToAnswerMap := readCSVtoMap("problems.csv")
-	score := 0
-	questions := 0
+
+	fileNamePtr := flag.String("fileName", "problems.csv", "this is filename to read")
+	flag.Parse()
+	fmt.Println("Using file: ", *fileNamePtr)
+
+	questionToAnswerMap := readCSVtoMap(*fileNamePtr)
+	correctAnswersCount := 0
+	questionsCount := 0
 
 	reader := bufio.NewReader(os.Stdin)
 	for question := range questionToAnswerMap {
-		questions++
+		questionsCount++
 		fmt.Println("Your next question is ", question)
 
 		userAnswer, _ := reader.ReadString('\n')
@@ -26,14 +32,14 @@ func main() {
 
 		if strings.TrimSpace(userAnswer) == correctAnswer {
 			fmt.Println("You are a rockstar!")
-			score++
+			correctAnswersCount++
 
 		} else {
 			fmt.Println("You suck!")
 		}
 
 	}
-	fmt.Println("Your score is ", score, " out of ", questions)
+	fmt.Println("Your score is ", correctAnswersCount, " out of ", questionsCount)
 }
 
 func readCSVtoMap(csvFileName string) map[string]string {
