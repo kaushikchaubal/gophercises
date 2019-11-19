@@ -1,17 +1,34 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
+	questionToAnswerMap := readCSVtoMap("problems.csv")
 
-	readCSVtoMap("problems.csv")
-	fmt.Println(questionToAnswerMap)
+	reader := bufio.NewReader(os.Stdin)
+	for question := range questionToAnswerMap {
+		fmt.Println("Your next question is ", question)
+
+		userAnswer, _ := reader.ReadString('\n')
+
+		correctAnswer := questionToAnswerMap[question]
+
+		if strings.TrimSpace(userAnswer) == correctAnswer {
+			fmt.Println("You are a rockstar!")
+		} else {
+			fmt.Println("You suck!")
+			break
+		}
+
+	}
 }
 
 func readCSVtoMap(csvFileName string) map[string]string {
@@ -33,7 +50,7 @@ func readCSVtoMap(csvFileName string) map[string]string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		questionToAnswerMap[record[0]] = record[1]
+		questionToAnswerMap[record[0]] = strings.TrimSpace(record[1])
 	}
 
 	return questionToAnswerMap
