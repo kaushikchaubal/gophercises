@@ -13,20 +13,20 @@ import (
 )
 
 func main() {
-	csvFileName := getCsvFileName()
-	questionAnswerMap, questionsCount := readCsvFileIntoMap(*csvFileName)
-	correctAnswersCount := playTheGame(questionAnswerMap)
+	csvFileName, timerDuration := getDataFromFlags()
+	questionAnswerMap, questionsCount := readCsvFileIntoMap(csvFileName)
+	correctAnswersCount := playTheGame(questionAnswerMap, timerDuration)
 
 	fmt.Println("Your score is", correctAnswersCount, "out of", questionsCount)
 }
 
-func playTheGame(questionToAnswerMap map[string]string) int {
+func playTheGame(questionToAnswerMap map[string]string, timerDuration time.Duration) int {
 	correctAnswersCount := 0
 
 	reader := bufio.NewReader(os.Stdin)
 
 	channel := make(chan string)
-	timer := time.NewTimer(4 * time.Second)
+	timer := time.NewTimer(timerDuration)
 
 	go func() {
 		<-timer.C
@@ -62,11 +62,12 @@ func interactiveQA(correctAnswersCount *int, question string, questionToAnswerMa
 	}
 }
 
-func getCsvFileName() *string {
+func getDataFromFlags() (string, time.Duration) {
 	fileNamePtr := flag.String("fileName", "problems.csv", "this is filename to read")
+	timerDurationPtr := flag.Duration("timerDuration", 4*time.Second, "Time duration for the quiz before it times out")
 	flag.Parse()
-	fmt.Println("Using file: ", *fileNamePtr)
-	return fileNamePtr
+
+	return *fileNamePtr, *timerDurationPtr
 }
 
 func readCsvFileIntoMap(csvFileName string) (map[string]string, int) {
