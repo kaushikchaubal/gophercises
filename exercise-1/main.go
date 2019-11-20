@@ -14,15 +14,14 @@ import (
 
 func main() {
 	csvFileName := getCsvFileName()
-	questionAnswerMap := readCsvFileIntoMap(*csvFileName)
-	correctAnswersCount, questionsCount := playTheGame(questionAnswerMap)
+	questionAnswerMap, questionsCount := readCsvFileIntoMap(*csvFileName)
+	correctAnswersCount := playTheGame(questionAnswerMap)
 
 	fmt.Println("Your score is", correctAnswersCount, "out of", questionsCount)
 }
 
-func playTheGame(questionToAnswerMap map[string]string) (int, int) {
+func playTheGame(questionToAnswerMap map[string]string) int {
 	correctAnswersCount := 0
-	questionsCount := 0
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -37,7 +36,6 @@ func playTheGame(questionToAnswerMap map[string]string) (int, int) {
 
 	go func() {
 		for question := range questionToAnswerMap {
-			questionsCount++
 			interactiveQA(&correctAnswersCount, question, questionToAnswerMap, reader)
 		}
 
@@ -46,7 +44,7 @@ func playTheGame(questionToAnswerMap map[string]string) (int, int) {
 	}()
 
 	<-channel
-	return correctAnswersCount, questionsCount
+	return correctAnswersCount
 }
 
 func interactiveQA(correctAnswersCount *int, question string, questionToAnswerMap map[string]string, reader *bufio.Reader) {
@@ -71,7 +69,8 @@ func getCsvFileName() *string {
 	return fileNamePtr
 }
 
-func readCsvFileIntoMap(csvFileName string) map[string]string {
+func readCsvFileIntoMap(csvFileName string) (map[string]string, int) {
+	questionsCount := 0
 	csvfile, err := os.Open(csvFileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -89,8 +88,10 @@ func readCsvFileIntoMap(csvFileName string) map[string]string {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		questionToAnswerMap[record[0]] = strings.TrimSpace(record[1])
+		questionsCount++
 	}
 
-	return questionToAnswerMap
+	return questionToAnswerMap, questionsCount
 }
