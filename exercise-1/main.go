@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -24,22 +25,43 @@ func playTheGame(questionToAnswerMap map[string]string) (int, int) {
 	questionsCount := 0
 
 	reader := bufio.NewReader(os.Stdin)
-	for question := range questionToAnswerMap {
-		questionsCount++
-		fmt.Println("Your next question is ", question)
 
-		userAnswer, _ := reader.ReadString('\n')
+	channel := make(chan string)
+	timer := time.NewTimer(4 * time.Second)
 
-		correctAnswer := questionToAnswerMap[question]
+	go func() {
+		<-timer.C
+		fmt.Println("Time up!")
+		channel <- "showResult"
+	}()
 
-		if strings.TrimSpace(userAnswer) == correctAnswer {
-			fmt.Println("You are a rockstar!")
-			correctAnswersCount++
-		} else {
-			fmt.Println("You suck!")
+	go func() {
+		for question := range questionToAnswerMap {
+			questionsCount++
+			interactiveQA(&correctAnswersCount, question, questionToAnswerMap, reader)
 		}
-	}
+
+		timer.Stop()
+		channel <- "showResult"
+	}()
+
+	<-channel
 	return correctAnswersCount, questionsCount
+}
+
+func interactiveQA(correctAnswersCount *int, question string, questionToAnswerMap map[string]string, reader *bufio.Reader) {
+	fmt.Println("Your next question is ", question)
+
+	userAnswer, _ := reader.ReadString('\n')
+
+	correctAnswer := questionToAnswerMap[question]
+
+	if strings.TrimSpace(userAnswer) == correctAnswer {
+		fmt.Println("You are a rockstar!")
+		*correctAnswersCount++
+	} else {
+		fmt.Println("You suck!")
+	}
 }
 
 func getCsvFileName() *string {
