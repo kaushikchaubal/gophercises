@@ -9,47 +9,69 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
-	csvFileName := getCsvFileName()
-	questionAnswerMap := readCsvFileIntoMap(*csvFileName)
-	correctAnswersCount, questionsCount := playTheGame(questionAnswerMap)
+	csvFileName, timerDuration := getDataFromFlags()
+	questionAnswerMap, questionsCount := readCsvFileIntoMap(csvFileName)
+	correctAnswersCount := playTheGame(questionAnswerMap, timerDuration)
 
 	fmt.Println("Your score is", correctAnswersCount, "out of", questionsCount)
 }
 
-func playTheGame(questionToAnswerMap map[string]string) (int, int) {
+func playTheGame(questionToAnswerMap map[string]string, timerDuration time.Duration) int {
 	correctAnswersCount := 0
-	questionsCount := 0
 
 	reader := bufio.NewReader(os.Stdin)
-	for question := range questionToAnswerMap {
-		questionsCount++
-		fmt.Println("Your next question is ", question)
 
-		userAnswer, _ := reader.ReadString('\n')
+	channel := make(chan string)
+	timer := time.NewTimer(timerDuration)
 
-		correctAnswer := questionToAnswerMap[question]
+	go func() {
+		<-timer.C
+		fmt.Println("Time up!")
+		channel <- "showResult"
+	}()
 
-		if strings.TrimSpace(userAnswer) == correctAnswer {
-			fmt.Println("You are a rockstar!")
-			correctAnswersCount++
-		} else {
-			fmt.Println("You suck!")
+	go func() {
+		for question := range questionToAnswerMap {
+			interactiveQA(&correctAnswersCount, question, questionToAnswerMap, reader)
 		}
+
+		timer.Stop()
+		channel <- "showResult"
+	}()
+
+	<-channel
+	return correctAnswersCount
+}
+
+func interactiveQA(correctAnswersCount *int, question string, questionToAnswerMap map[string]string, reader *bufio.Reader) {
+	fmt.Println("Your next question is ", question)
+
+	userAnswer, _ := reader.ReadString('\n')
+
+	correctAnswer := questionToAnswerMap[question]
+
+	if strings.TrimSpace(userAnswer) == correctAnswer {
+		fmt.Println("You are a rockstar!")
+		*correctAnswersCount++
+	} else {
+		fmt.Println("You suck!")
 	}
-	return correctAnswersCount, questionsCount
 }
 
-func getCsvFileName() *string {
+func getDataFromFlags() (string, time.Duration) {
 	fileNamePtr := flag.String("fileName", "problems.csv", "this is filename to read")
+	timerDurationPtr := flag.Duration("timerDuration", 4*time.Second, "Time duration for the quiz before it times out")
 	flag.Parse()
-	fmt.Println("Using file: ", *fileNamePtr)
-	return fileNamePtr
+
+	return *fileNamePtr, *timerDurationPtr
 }
 
-func readCsvFileIntoMap(csvFileName string) map[string]string {
+func readCsvFileIntoMap(csvFileName string) (map[string]string, int) {
+	questionsCount := 0
 	csvfile, err := os.Open(csvFileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -67,8 +89,10 @@ func readCsvFileIntoMap(csvFileName string) map[string]string {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		questionToAnswerMap[record[0]] = strings.TrimSpace(record[1])
+		questionsCount++
 	}
 
-	return questionToAnswerMap
+	return questionToAnswerMap, questionsCount
 }
