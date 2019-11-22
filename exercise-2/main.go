@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gophercises/exercise-2/urlshortner"
 	"log"
 	"net/http"
 )
@@ -9,29 +10,15 @@ import (
 func main() {
 	mux := defaultMux()
 
-	// // Build the MapHandler using the mux as the fallback
-	// pathsToUrls := map[string]string{
-	// 	"/urlshort-godoc": "https://godoc.org/github.com/gophercises/urlshort",
-	// 	"/yaml-godoc":     "https://godoc.org/gopkg.in/yaml.v2",
-	// }
+	pathsToUrls := map[string]string{
+		"/u": "https://godoc.org/github.com/gophercises/urlshort",
+		"/y": "https://godoc.org/gopkg.in/yaml.v2",
+	}
 
-	// mapHandler := urlshortner.MapHandler(pathsToUrls, mux)
-
-	// // Build the YAMLHandler using the mapHandler as the
-	// // fallback
-	// yaml := `
-	// - path: /urlshort
-	//   url: https://github.com/gophercises/urlshort
-	// - path: /urlshort-final
-	//   url: https://github.com/gophercises/urlshort/tree/solution
-	// `
-	// yamlHandler, err := urlshortner.YAMLHandler([]byte(yaml), mapHandler)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	mapHandler := urlshortner.MapHandler(pathsToUrls, mux)
 
 	fmt.Println("Starting the server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", mapHandler))
 }
 
 func defaultMux() *http.ServeMux {
@@ -41,5 +28,5 @@ func defaultMux() *http.ServeMux {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello, world!")
+	fmt.Fprintln(w, "Hello world!")
 }
