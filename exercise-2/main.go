@@ -11,14 +11,17 @@ func main() {
 	mux := defaultMux()
 
 	pathsToUrls := map[string]string{
-		"/u": "https://godoc.org/github.com/gophercises/urlshort",
+		"/u": "https://www.google.com",
 		"/y": "https://godoc.org/gopkg.in/yaml.v2",
 	}
 
 	mapHandler := urlshortner.MapHandler(pathsToUrls, mux)
 
+	yamlFileName := "short-urls.yaml"
+	yamlHandler := urlshortner.YAMLHandler(yamlFileName, mapHandler)
+
 	fmt.Println("Starting the server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mapHandler))
+	log.Fatal(http.ListenAndServe(":8080", yamlHandler))
 }
 
 func defaultMux() *http.ServeMux {
@@ -28,5 +31,5 @@ func defaultMux() *http.ServeMux {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello world!")
+	fmt.Fprintln(w, "This is the default path... be more creative!")
 }

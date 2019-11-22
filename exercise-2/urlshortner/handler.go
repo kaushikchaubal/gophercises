@@ -1,7 +1,10 @@
 package urlshortner
 
 import (
+	"io/ioutil"
 	"net/http"
+
+	"gopkg.in/yaml.v2"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -29,18 +32,24 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 // that will attempt to map any paths to their corresponding
 // URL. If the path is not provided in the YAML, then the
 // fallback http.Handler will be called instead.
-//
-// YAML is expected to be in the format:
-//
-//     - path: /some-path
-//       url: https://www.some-url.com/demo
-//
-// The only errors that can be returned all related to having
-// invalid YAML data.
-//
-// See MapHandler to create a similar http.HandlerFunc via
-// a mapping of paths to urls.
-func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	// TODO: Implement this...
-	return nil, nil
+func YAMLHandler(yamlFileName string, fallback http.Handler) http.HandlerFunc {
+	pathsToUrls := parseYAML(yamlFileName)
+	return MapHandler(pathsToUrls, fallback)
+}
+
+func parseYAML(yamlFileName string) map[string]string {
+	yamlFile, err := ioutil.ReadFile(yamlFileName)
+	if err != nil {
+		panic("Incorrect file!")
+	}
+
+	pathsToUrls := make(map[string]string)
+
+	err = yaml.Unmarshal(yamlFile, pathsToUrls)
+	if err != nil {
+		panic("Incorrect yaml format")
+	}
+
+	return pathsToUrls
+
 }
